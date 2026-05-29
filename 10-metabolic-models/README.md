@@ -240,20 +240,18 @@ Usemos valores reales de parámetros para las dos reacciones y resolvamos el sis
 
 **Parámetros cinéticos:**
 
-```text
-Reacción 1 — Glucosa → 2 Piruvato  (complejo glucolítico simplificado)
-  Vmax₁ = 2.5  mmol/gDW/h
-  Km₁   = 0.5  mmol/L      (concentración media de saturación para glucosa)
+| Reacción                     |     Vmax       |    Km      | Descripción                                      |
+|:-----------------------------|:--------------:|:----------:|:-------------------------------------------------|
+| R1 — Glucosa → 2 Piruvato    | 2.5 mmol/gDW/h | 0.5 mmol/L | Complejo glucolítico simplificado                |
+| R2 — Piruvato → Etanol + CO₂ | 5.0 mmol/gDW/h | 0.2 mmol/L | Piruvato descarboxilasa + alcohol deshidrogenasa |
 
-Reacción 2 — Piruvato → Etanol + CO₂  (piruvato descarboxilasa + alcohol deshidrogenasa)
-  Vmax₂ = 5.0  mmol/gDW/h
-  Km₂   = 0.2  mmol/L      (concentración media de saturación para piruvato)
+**Condiciones iniciales (t = 0):**
 
-Condiciones iniciales (t = 0):
-  [G]₀  = 10.0  mmol/L     (glucosa disponible en el medio)
-  [P]₀  =  0.0  mmol/L     (sin piruvato acumulado al inicio)
-  [E]₀  =  0.0  mmol/L     (sin etanol al inicio)
-```
+| Metabolito   | Concentración   | Descripción                      |
+|:-------------|:---------------:|:---------------------------------|
+| [G]₀         |   10.0 mmol/L   | Glucosa disponible en el medio   |
+| [P]₀         |   0.0 mmol/L    | Sin piruvato acumulado al inicio |
+| [E]₀         |   0.0 mmol/L    | Sin etanol al inicio             |
 
 **Paso 1 — Calcular las tasas en t = 0:**
 
@@ -273,23 +271,76 @@ $$\left.\frac{d[P]}{dt}\right|_{t=0} = 2v_1 - v_2 = +4.762 \ \text{mmol/L/h} \qu
 
 $$\left.\frac{d[E]}{dt}\right|_{t=0} = v_2 = 0.000 \ \text{mmol/L/h} \quad \rightarrow \text{etanol aún no se produce}$$
 
+> [!IMPORTANT]
+> 🔍 **Aclaración sobre la estequiometría:**
+>
+> La reacción R1 es: **Glucosa → 2 Piruvato**
+>
+> Esto significa los coeficientes estequiométricos son:
+> - Glucosa: **-1** (se consume 1 molécula)
+> - Piruvato: **+2** (se producen 2 moléculas)
+>
+> Por eso las derivadas son:
+> - $\frac{d[G]}{dt} = (-1) \times v_1 = -2.381$ mmol/L/h
+> - $\frac{d[P]}{dt} = (+2) \times v_1 = +4.762$ mmol/L/h
+>
+> **Importante:** En el paso de tiempo Δt = 0.5 h, el cambio NO es el flujo completo, sino:
+> - Δ[G] = (-2.381) × 0.5 = **-1.190** mmol/L (no -2.381)
+> - Δ[P] = (+4.762) × 0.5 = **+2.381** mmol/L (no +4.762)
+>
+> La glucosa **DISMINUYE 1.190** (que es 2.381 × 0.5), no 2.381 directamente. La relación es correcta: por cada 1 glucosa consumida, se producen exactamente 2 piruvatos, pero el cambio observado depende del intervalo de tiempo (0.5 h en este caso).
+
+> [!TIP]
+> **🕐 Relación entre Flujo, Derivada y Paso de Tiempo**
+>
+> El flujo tiene unidades **por hora**: v₁ = 2.381 mmol/gDW/**h**
+>
+> La derivada expresa la **tasa de cambio por cada 1 hora**:
+> $$\frac{d[G]}{dt} = -2.381 \text{ mmol/L per } \boxed{1 \text{ hour}}$$
+>
+> Cuando integras con Euler, multiplicas por el paso de tiempo real (Δt):
+>
+> | Δt (h)  | Cálculo       | Δ[G] (mmol/L) | Interpretación               |
+> |:-------:|:--------------|:-------------:|:-----------------------------|
+> |   1.0   | -2.381 × 1.0  |    -2.381     | En 1 hora completa           |
+> |   0.5   | -2.381 × 0.5  |    -1.190     | En media hora (nuestro caso) |
+> |   0.1   | -2.381 × 0.1  |    -0.238     | En 1/10 de hora              |
+> |  0.01   | -2.381 × 0.01 |    -0.024     | En 1/100 de hora             |
+>
+> **La regla de oro:** Cambio = (derivada) × (paso de tiempo)
+> $$\Delta [X] = \frac{d[X]}{dt}\bigg|_n \times \Delta t$$
+>
+> El paso de tiempo es el **factor de escala** que dice "cuánto avanzamos".
+
 **Paso 3 — Integración numérica (pasos de Δt = 0.5 h, método de Euler explícito):**
 
-```text
- t (h) │  [G] (mmol/L) │  [P] (mmol/L) │  [E] (mmol/L) │  v₁     │  v₂
-───────┼───────────────┼───────────────┼───────────────┼─────────┼─────────
-   0.0 │    10.000     │     0.000     │     0.000     │  2.381  │  0.000
-   0.5 │     8.810     │     2.381     │     0.000     │  2.291  │  4.297
-   1.0 │     7.665     │     0.537     │     2.149     │  2.185  │  3.302
-   1.5 │     6.572     │     0.213     │     3.800     │  2.065  │  2.760
-   2.0 │     5.539     │     0.139     │     5.180     │  1.929  │  2.545
-   3.0 │     3.595     │     0.104     │     7.853     │  1.608  │  2.282
-   4.0 │     1.864     │     0.090     │     9.970     │  1.201  │  2.121
-   5.0 │     0.500     │     0.080     │    11.482     │  0.625  │  2.000
-   6.0 │     0.032     │     0.030     │    12.710     │  0.140  │  1.429
-   7.0 │     0.001     │     0.003     │    13.066     │  0.005  │  0.067
-   8.0 │     0.000     │     0.000     │    13.070     │  0.000  │  0.000
-```
+**Fórmula de Euler explícito:**
+
+$$[X]_{n+1} = [X]_n + \frac{d[X]}{dt}\bigg|_n \times \Delta t$$
+
+**Cálculo del primer paso (t = 0 → t = 0.5 h):**
+
+$$[G]_{1} = [G]_0 + \frac{d[G]}{dt}\bigg|_0 \times \Delta t = 10.0 + (-2.381) \times 0.5 = 10.0 - 1.190 = 8.810 \text{ mmol/L} \,\checkmark$$
+
+$$[P]_{1} = [P]_0 + \frac{d[P]}{dt}\bigg|_0 \times \Delta t = 0.0 + (+4.762) \times 0.5 = 0.0 + 2.381 = 2.381 \text{ mmol/L} \,\checkmark$$
+
+$$[E]_{1} = [E]_0 + \frac{d[E]}{dt}\bigg|_0 \times \Delta t = 0.0 + 0.0 \times 0.5 = 0.0 \text{ mmol/L} \,\checkmark$$
+
+**Tabla de resultados numéricos:**
+
+| t (h)  | [G] (mmol/L)  | [P] (mmol/L) | [E] (mmol/L) |  v₁   |  v₂   |
+|:------:|:-------------:|:------------:|:------------:|:-----:|:-----:|
+|  0.0   |    10.000     |    0.000     |    0.000     | 2.381 | 0.000 |
+|  0.5   |     8.810     |    2.381     |    0.000     | 2.291 | 4.297 |
+|  1.0   |     7.665     |    0.537     |    2.149     | 2.185 | 3.302 |
+|  1.5   |     6.572     |    0.213     |    3.800     | 2.065 | 2.760 |
+|  2.0   |     5.539     |    0.139     |    5.180     | 1.929 | 2.545 |
+|  3.0   |     3.595     |    0.104     |    7.853     | 1.608 | 2.282 |
+|  4.0   |     1.864     |    0.090     |    9.970     | 1.201 | 2.121 |
+|  5.0   |     0.500     |    0.080     |    11.482    | 0.625 | 2.000 |
+|  6.0   |     0.032     |    0.030     |    12.710    | 0.140 | 1.429 |
+|  7.0   |     0.001     |    0.003     |    13.066    | 0.005 | 0.067 |
+|  8.0   |     0.000     |    0.000     |    13.070    | 0.000 | 0.000 |
 
 > [!NOTE]
 > 📌 Lectura de la tabla:
@@ -391,38 +442,15 @@ lo que se produce de G6P debe ser exactamente igual a lo que se consume.
 
 Construir un GEM es un proceso iterativo que integra información genómica, bioquímica y de literatura:
 
-```text
-PASO 1: Anotación genómica
-  Genoma (.fasta) → Prokka/Bakta → Genes con número EC
-  Ej.: gen b0001 → EC 2.7.1.1 = hexoquinasa
-
-PASO 2: Asignación de reacciones
-  EC number → Reacción en BiGG/KEGG/MetaCyc
-  HEX1: Glc + ATP → G6P + ADP
-
-PASO 3: Reglas GPR (Gene–Protein–Reaction)
-  (b0001 OR b0002)  → reacción activa si al menos un gen está presente
-  (b0003 AND b0004) → reacción activa solo si ambos genes están presentes
-                      (enzimas con múltiples subunidades)
-
-PASO 4: Límites de flujo
-  Reversibles:    -1000 ≤ v ≤ 1000  mmol/gDW/h
-  Irreversibles:      0 ≤ v ≤ 1000  mmol/gDW/h
-  Uptake ajustado según condición experimental
-
-PASO 5: Reacciones de intercambio (Exchange reactions)
-  EX_glc_e: Glucosa_ext ⇌ Glucosa_interna
-  (representan la frontera entre la célula y el medio)
-
-PASO 6: Función objetivo — reacción de biomasa
-  aATP + bNADPH + cGly + dAla + ... → Biomasa
-  (pseudoreacción que representa la síntesis de todos los
-  componentes celulares necesarios para crecer)
-
-PASO 7: Curación manual y validación
-  → Verificar balance de masa y carga
-  → Comparar predicciones vs. datos experimentales publicados
-```
+| Paso   | Nombre                    | Entrada → Salida                          | Ejemplo                                                  |
+|:------:|:--------------------------|:------------------------------------------|:---------------------------------------------------------|
+|   1    | Anotación genómica        | Genoma (.fasta) → Genes con número EC     | gen b0001 → EC 2.7.1.1 = hexoquinasa                     |
+|   2    | Asignación de reacciones  | EC number → Reacción en BiGG/KEGG/MetaCyc | HEX1: Glc + ATP → G6P + ADP                              |
+|   3    | Reglas GPR                | Genes → Regla booleana                    | (b0001 OR b0002) ó (b0003 AND b0004)                     |
+|   4    | Límites de flujo          | Reversibilidad → Límites [lb, ub]         | Reversible: -1000 ≤ v ≤ 1000; Irreversible: 0 ≤ v ≤ 1000 |
+|   5    | Reacciones de intercambio | Frontera célula-medio                     | EX_glc_e: Glucosa_ext ⇌ Glucosa_int                      |
+|   6    | Función objetivo          | Biomasa                                   | aATP + bNADPH + cGly + ... → Biomasa                     |
+|   7    | Curación manual           | Balance y validación                      | Verificar vs. datos experimentales                       |
 
 > [!TIP]
 > Los modelos GEM curados están disponibles en **BiGG Models** (http://bigg.ucsd.edu/) para cientos de organismos, incluyendo *E. coli* iJO1366, *S. cerevisiae* iMM904, *P. putida* iJN1463, entre muchos más.
@@ -467,14 +495,13 @@ En la práctica, los pasos 1–7 se realizan con ayuda de software especializado
 
 Los modelos se guardan en formatos estándar como **SBML** (`.xml`) o **JSON**:
 
-```text
-Componentes de un modelo COBRA:
-  ├── metabolites   → ID, nombre, fórmula química, carga, compartimento
-  ├── reactions     → estequiometría, límites [lb, ub], regla GPR
-  ├── genes         → lista de genes y sus IDs
-  ├── objective     → función a optimizar (ej. maximizar biomasa)
-  └── compartments  → [c] citoplasma, [p] periplasma, [e] extracelular
-```
+| Componente       | Descripción                                       |
+|:-----------------|:--------------------------------------------------|
+| **metabolites**  | ID, nombre, fórmula química, carga, compartimento |
+| **reactions**    | Estequiometría, límites [lb, ub], regla GPR       |
+| **genes**        | Lista de genes y sus IDs                          |
+| **objective**    | Función a optimizar (ej. maximizar biomasa)       |
+| **compartments** | [c] citoplasma, [p] periplasma, [e] extracelular  |
 
 ---
 
@@ -1182,7 +1209,8 @@ En este módulo ha aprendido que:
 
 ## Prácticas del módulo
 
-| Práctica                                                                                  | Descripción                                                                                                                                                                       |
-|:------------------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| [Práctica — Google Colab: Introducción a COBRApy](exercises/01_intro_cobrapy_colab.ipynb) | Exploración de un modelo GEM (*E. coli* iJO1366), simulaciones FBA, análisis de knockouts, exploración de la matriz estequiométrica y diseño básico de biofábricas usando COBRApy |
+| Práctica                                                                                                                                                                                                                                | Descripción                                                                                                                                                                       |
+|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| [Práctica — Google Colab: Introducción a COBRApy](exercises/01_2_intro_to_cobra_models_cobrapy_colab.ipynb)                                                                                                                             | Exploración de un modelo GEM (*E. coli* iJO1366), simulaciones FBA, análisis de knockouts, exploración de la matriz estequiométrica y diseño básico de biofábricas usando COBRApy |
+| Práctica: Construcción de un Modelo COBRA desde Cero [![Open in MATLAB Online](https://www.mathworks.com/images/responsive/global/open-in-matlab-online.svg)](https://matlab.mathworks.com/open/github/v1?repo=ae-tafur/bioinformatics) | Explorar los conceptos basicos de un modelo COBRA y su estructura en MATLAB                                                                                                       |
 
